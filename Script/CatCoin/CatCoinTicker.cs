@@ -30,6 +30,9 @@ public class CatCoinTicker : MonoBehaviour
 
     float timer;
 
+    [HideInInspector] public RectTransform cachedRectTransform;
+    void Awake() { cachedRectTransform = GetComponent<RectTransform>(); }
+
     void Update()
     {
         timer += Time.deltaTime;
@@ -42,9 +45,9 @@ public class CatCoinTicker : MonoBehaviour
     {
         if (CatManager.Instance == null || CatCoinManager.Instance == null) return;
 
-        var cats = FindObjectsOfType<CatDragHandler>(includeInactive: false);
-
-        int count = CatManager.Instance.GetCatCounts();
+        //  캐시된 리스트 사용
+        var cats = CatManager.Instance.ActiveCatsRO;
+        int count = cats?.Count ?? 0;
         if (count == 0)
         {
             lastCatCount = 0;
@@ -52,49 +55,58 @@ public class CatCoinTicker : MonoBehaviour
             return;
         }
 
-        long bonusPerCat = 0;
+        // 반복 호출 캐시
+        int multiple = CatCoinManager.Instance.MultipleGetCatCoin();
+        bool inBoost = (GameManager.Instance.RemainingTime != null
+                        && GameManager.Instance.RemainingTime.Length > 0
+                        && GameManager.Instance.RemainingTime[0] > 0);
+
         long totalCoins = 0;
 
-        foreach (var cat in cats)
+        for (int i = 0; i < count; i++)
         {
+            var cat = cats[i];
             if (!cat || !cat.gameObject.activeInHierarchy) continue;
 
             int lvl = CatManager.Instance.ClampLevel(cat.level);
-            float perCycle = CatManager.Instance.GetCoinPerSecond(lvl);
-            long baseGainThisCycle = Mathf.Max(0, Mathf.FloorToInt(perCycle));
+            long baseGainThisCycle = Mathf.Max(0, Mathf.FloorToInt(CatManager.Instance.GetCoinPerSecond(lvl)));
 
-            long gain = baseGainThisCycle + bonusPerCat;
-            if (gain < 0) gain = 0;
+            long gain = baseGainThisCycle * multiple;
+            if (inBoost) gain *= 3;
 
-            int multiple = CatCoinManager.Instance.MultipleGetCatCoin();
-            gain *= multiple;
-            if(GameManager.Instance.RemainingTime[0] > 0) gain *= 3;
+            if (gain <= 0) continue;
 
             totalCoins += gain;
 
-            if (coinPrefab && coinTarget && gain > 0)
-                SpawnVisual(cat.GetComponent<RectTransform>(), multiple);
+            // 캐시된 RectTransform 사용
+            var rt = cat.cachedRectTransform != null ? cat.cachedRectTransform
+                                                     : cat.GetComponent<RectTransform>();
+
+            if (coinPrefab && coinTarget)
+                SpawnVisual(rt, multiple, inBoost); // inBoost 전달(선택)
         }
 
-        // 소비재 보너스(%)
-        totalCoins = (totalCoins * CatSuppliesManager.Instance.GetSuppliesBonus()) / 100;
+        if(GameManager.Instance.OneDayBuffTime > 0) totalCoins *= GameManager.Instance.OneDayBuff_PlusMultipleCoin;
+
+        // 보너스도 루프 밖에서 한 번만
+        int suppliesBonus = CatSuppliesManager.Instance.GetSuppliesBonus(); // 100=기본, 130=+30%라면 그대로 OK
+        totalCoins = (totalCoins * suppliesBonus) / 100;
 
         lastCatCount = count;
         CatCoinManager.Instance.AddCatCoin(totalCoins);
         lastAddedCoins = totalCoins;
 
-        if (coinCounterAnimator != null)
-            coinCounterAnimator.AnimateTo(CatCoinManager.Instance.HaveCatCoinCount);
+        coinCounterAnimator?.AnimateTo(CatCoinManager.Instance.HaveCatCoinCount);
     }
 
-    void SpawnVisual(RectTransform catRt, int multiple = 1)
+    void SpawnVisual(RectTransform catRt, int multiple = 1, bool inBoost = false)
     {
         if (!catRt) return;
 
         var parent = spawnParent ? spawnParent : catRt.root as RectTransform;
         Vector3 start = catRt.position + (Vector3)(Random.insideUnitCircle * spawnJitter);
 
-        // 1) 일반 코인: 항상 생성 (배수 스프라이트 반영)
+        // 1) 일반 코인
         SpawnOne(
             prefab: coinPrefab,
             parent: parent,
@@ -107,44 +119,39 @@ public class CatCoinTicker : MonoBehaviour
                 var sprites = CatCoinManager.Instance.CatCoinSprite;
                 if (img != null && sprites != null && sprites.Length > 0)
                 {
-                    int idx = Mathf.Clamp(multiple - 1, 0, sprites.Length - 1);
+            // multiple: 1~5 → idx: 0~4
+            int idx = Mathf.Clamp(multiple - 1, 0, sprites.Length - 1);
                     img.sprite = sprites[idx];
                 }
             });
 
-        // 2) 골드 코인: 확률 당첨 시 → 비주얼 + 코인지급 콜백
-        bool goldHit = (GoldCoinPrefab && GoldCoinTarget && CatCoinManager.Instance.GetCatGoldCoinForCoinTick());
-        if (goldHit)
+        // 2) 골드 코인
+        if (GoldCoinPrefab && GoldCoinTarget && CatCoinManager.Instance.GetCatGoldCoinForCoinTick())
         {
-            SpawnOne(
-                prefab: GoldCoinPrefab,
-                parent: parent,
-                startWorldPos: start,
-                target: GoldCoinTarget,
-                travelTime: coinTravelTime);
-
-            if (GameManager.Instance.RemainingTime[0] > 0)
-                CatCoinManager.Instance.AddCatCoin(3);
+            SpawnOne(GoldCoinPrefab, parent, start, GoldCoinTarget, coinTravelTime, null);
+            if (inBoost)
+            {
+                if (GameManager.Instance.OneDayBuffTime > 0) CatCoinManager.Instance.AddCatGoldCoin(9);
+                else CatCoinManager.Instance.AddCatGoldCoin(3);
+            }
             else
-                CatCoinManager.Instance.AddCatGoldCoin(1);
+            {
+                if (GameManager.Instance.OneDayBuffTime > 0) CatCoinManager.Instance.AddCatGoldCoin(3);
+                else CatCoinManager.Instance.AddCatGoldCoin(1);
+            }
         }
 
-        // 3) 고양이 알: 확률 당첨 시 → 비주얼 + 코인지급/아이템 지급 콜백
-        bool eggHit = (CatEggPrefab && CatEggTarget && CatCoinManager.Instance.GetCatEggForCoinTick());
-        if (eggHit)
+        // 3) 고양이 알
+        if (CatEggPrefab && CatEggTarget && CatCoinManager.Instance.GetCatEggForCoinTick())
         {
-            SpawnOne(
-                prefab: CatEggPrefab,
-                parent: parent,
-                startWorldPos: start,
-                target: CatEggTarget,
-                travelTime: coinTravelTime);
-
-
+            SpawnOne(CatEggPrefab, parent, start, CatEggTarget, coinTravelTime, null);
             CatSummonsManager.Instance.AddTicket(CatSummonsManager.SummonTier.Common);
         }
 
-        Debug.Log($"코인 시각효과 스폰: 배수 {multiple}, 골드Hit={goldHit}, 알Hit={eggHit}");
+        // 로그는 개발시에만
+        // #if UNITY_EDITOR
+        // Debug.Log($"코인 시각효과 스폰: 배수 {multiple}, inBoost={inBoost}");
+        // #endif
     }
 
     void SpawnOne(GameObject prefab, RectTransform parent, Vector3 startWorldPos,
