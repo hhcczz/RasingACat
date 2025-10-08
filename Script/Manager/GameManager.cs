@@ -31,6 +31,16 @@ public class GameManager : MonoBehaviour
     public int OneDayBuffTime = 0;
     public bool OneDayBuffUsed = false;
 
+    public int OneDayBuff_PlusMultipleCoin = 3;
+    public int OneDayBuff_PlusMultipleGoldCoin = 3;
+    public int OneDayBuff_DecreaseFishTime = 1;
+    public int OneDayBuff_DecreaseAutoMerge = 10;
+    public int OneDayBuff_DecreaseAutoSummons = 10;
+    public int OneDayBuff_DecreaseRandomItemTime = 30;
+    public bool OneDayBuff_FixToRandomItemProability = false;
+    public float OneDayBuff_PlusJackPotMerge = 0.05f;
+    public int OneDayBuff_PlusSummonsLevel = 1;
+
     public event Action<int, int> OnFishChanged;
 
     public GameObject Block;

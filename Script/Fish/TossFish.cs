@@ -186,6 +186,7 @@ public class TossFish : MonoBehaviour
 
         // inclusive Random
         // TODO : Debuging Mode -> Real Mode        현재 : 리얼 모드
+        if (GameManager.Instance.OneDayBuffTime > 0) min += 1;
         int result = Random.Range(min + CatGymUPGradeManager.Instance.CatGymLevel[6], max + 1);
         //int result = Random.Range(min, CatManager.Instance.catNamesByLevel.Length);
         if (pass) result = index;

@@ -95,9 +95,19 @@ public class CatCoinManager : MonoBehaviour
 
     /// <summary>
     /// 고양이 코인 배수 판정.
-    /// - CatGymLevel[0] : 더블 확률
-    /// - CatGymLevel[1] : 트리플 확률
-    /// 반환: 최종 배수 (1, 2, 3)
+    /// 
+    /// CatGym의 업그레이드 레벨과 구매 상품에 따라 최종 배수를 결정합니다.
+    /// - CatGymLevel[0] : 더블(2배) 확률
+    /// - CatGymLevel[1] : 트리플(3배) 확률
+    /// - 기본 반환값 : 1배
+    /// 
+    /// 특수 상품 규칙:
+    /// - [0]번 상품 : 최소 2배 확정 (3배 확률은 여전히 적용됨)
+    /// - [1]번 상품 : 무조건 3배
+    /// - [2]번 상품 : 무조건 4배
+    /// - [3]번 상품 : 무조건 5배
+    /// 
+    /// 반환: 최종 배수 (1, 2, 3, 4, 5)
     /// </summary>
     public int MultipleGetCatCoin()
     {
@@ -105,31 +115,47 @@ public class CatCoinManager : MonoBehaviour
         if (gym == null || gym.CatGymLevel == null)
             return 1;
 
-        // --- 트리플 확률 가져오기 ---
-        float p3 = 0f;
-        if (gym.GetThreeCatCoinProbabilityValue != null && gym.CatGymLevel.Length > 1)
-        {
-            int lv3 = Mathf.Clamp(gym.CatGymLevel[1], 0, gym.GetThreeCatCoinProbabilityValue.Length - 1);
-            // 예: 0.5 == 0.5%
-            p3 = Mathf.Clamp01(gym.GetThreeCatCoinProbabilityValue[lv3] * 0.01f);
-        }
-
-        // --- 더블 확률 가져오기 ---
-        float p2 = 0f;
+        // --- 기본 확률 (Gym에서만 영향) ---
+        float p2 = 0f, p3 = 0f;
         if (gym.GetDoubleCatCoinProbabilityValue != null && gym.CatGymLevel.Length > 0)
         {
             int lv2 = Mathf.Clamp(gym.CatGymLevel[0], 0, gym.GetDoubleCatCoinProbabilityValue.Length - 1);
             p2 = Mathf.Clamp01(gym.GetDoubleCatCoinProbabilityValue[lv2] * 0.01f);
         }
+        if (gym.GetThreeCatCoinProbabilityValue != null && gym.CatGymLevel.Length > 1)
+        {
+            int lv3 = Mathf.Clamp(gym.CatGymLevel[1], 0, gym.GetThreeCatCoinProbabilityValue.Length - 1);
+            p3 = Mathf.Clamp01(gym.GetThreeCatCoinProbabilityValue[lv3] * 0.01f);
+        }
 
-        // --- 판정: 트리플 우선, 실패 시 더블 ---
+        // --- 상품 특전 적용 ---
+        if (CrystalShopManager.Instance != null)
+        {
+            // [3]번 상품 : 무조건 5배
+            if (CrystalShopManager.Instance.IsPurchased(3))
+                return 5;
+
+            // [2]번 상품 : 무조건 4배
+            if (CrystalShopManager.Instance.IsPurchased(2))
+                return 4;
+
+            // [1]번 상품 : 무조건 3배
+            if (CrystalShopManager.Instance.IsPurchased(1))
+                return 3;
+
+            // [0]번 상품 : 최소 2배 이상 보장 + 3배 확률 체크
+            if (CrystalShopManager.Instance.IsPurchased(0))
+            {
+                if (UnityEngine.Random.value < p3) return 3;
+                return 2; // 3배 실패 시 무조건 2배
+            }
+        }
+
+        // --- 기본 로직 (상품 미구매 시) ---
         if (UnityEngine.Random.value < p3) return 3;
         if (UnityEngine.Random.value < p2) return 2;
         return 1;
-
-
     }
-
     public bool GetCatEggForCoinTick()
     {
         return UnityEngine.Random.value < _catEggProbability;

@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 [RequireComponent(typeof(RectTransform))]
 public class FishTossMover : MonoBehaviour
@@ -10,62 +11,70 @@ public class FishTossMover : MonoBehaviour
     Vector2 velocity;            // px/sec
 
     [Header("Physics")]
-    [Range(0f, 1.2f)] public float bounciness = 0.9f;
-    [Range(0f, 10f)] public float linearDrag = 1.2f;
-    [Range(0f, 1f)] public float wallFriction = 0.15f;
-    public float minSpeed = 15f;
+    [Range(0f, 1f)] private float bounciness = 1f;
+    [Range(0f, 10f)] private float linearDrag = 1f;
+    [Range(0f, 1f)] private float wallFriction = 0.15f;
+    private readonly float minSpeed = 10f;
 
     [Header("Visual")]
     public bool rotateWithVelocity = true;
+    public bool useUnscaledTime = true;   // 옵션으로 TimeScale 제어
 
     [Header("Spawn Settings")]
-    [Tooltip("펑! 이펙트 프리팹(UI용, RectTransform/Animator 권장)")]
     public GameObject explodeFxPrefab;
-    [Tooltip("고양이/이펙트를 붙일 부모(보통 PlayArea). 비워두면 현재 부모 사용")]
     public RectTransform spawnParent;
-    [Tooltip("펑까지의 지연 시간(초) 랜덤 범위)")]
     public Vector2 explodeDelayRange = new Vector2(1f, 2f);
-    [Tooltip("펑 후에 고양이가 나올 때 살짝 위로 튕기는 속도(px/s)")]
     public float catInitialUpSpeed = 350f;
-    [Tooltip("소환할 고양이 레벨")]
     private int spawnLevel = 0; // 소환할 고양이 레벨
 
-    bool scheduled; // 한 번만 예약
+    Coroutine explodeCo; // 코루틴 핸들
+    bool scheduled;
 
+    // ───────── Init ─────────
     public void SetSpawnContext(
         RectTransform spawnParent,
         GameObject explodeFxPrefab,
         Vector2 explodeDelayRange,
         int catLevel)
     {
-        this.spawnParent = spawnParent;         // 고양이/FX가 붙을 부모 = PlayArea (씬 인스턴스)
+        this.spawnParent = spawnParent;
         this.explodeFxPrefab = explodeFxPrefab;
         this.explodeDelayRange = explodeDelayRange;
-        this.spawnLevel = catLevel;   // 내부에서 기록해두기
+        this.spawnLevel = catLevel;
     }
 
-    // ───────── Init ─────────
     public void Init(RectTransform playArea, float speed, float bounce, Vector2? dir = null)
     {
         if (!rt) rt = GetComponent<RectTransform>();
         boundArea = playArea;
-        bounciness = Mathf.Clamp(bounce, 0f, 1.2f);
+        bounciness = Mathf.Clamp(bounce, 0f, 1f);
         if (!rootCanvas) rootCanvas = GetComponentInParent<Canvas>(true);
 
         Vector2 d = (dir.HasValue ? dir.Value : Random.insideUnitCircle).normalized;
         if (d == Vector2.zero) d = Vector2.right;
         velocity = d * speed;
 
-        // 부모 기본값
         if (!spawnParent) spawnParent = boundArea ? boundArea : rt.parent as RectTransform;
 
-        // 폭발/소환 예약(중복 방지)
+        // 폭발/소환 예약
         if (!scheduled)
         {
             scheduled = true;
             float delay = Random.Range(explodeDelayRange.x, explodeDelayRange.y);
-            Invoke(nameof(ExplodeAndSpawnCat), delay);
+            explodeCo = StartCoroutine(ExplodeAfterDelay(delay));
         }
+    }
+
+    IEnumerator ExplodeAfterDelay(float t)
+    {
+        if (useUnscaledTime) yield return new WaitForSecondsRealtime(t);
+        else yield return new WaitForSeconds(t);
+        ExplodeAndSpawnCat();
+    }
+
+    void OnDisable()
+    {
+        if (explodeCo != null) StopCoroutine(explodeCo);
     }
 
     void Awake()
@@ -75,25 +84,29 @@ public class FishTossMover : MonoBehaviour
         if (!spawnParent) spawnParent = rt.parent as RectTransform;
     }
 
+    // ───────── Update ─────────
+    readonly Vector3[] _selfCorners = new Vector3[4];
+    readonly Vector3[] _areaCorners = new Vector3[4];
+
     void Update()
     {
         if (!rt) return;
 
-        float dt = Time.unscaledDeltaTime;
+        float dt = useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
 
-        // 1) 공기저항(선형 감속)
+        // 1) 공기저항
         float dragK = Mathf.Clamp01(linearDrag * dt);
         velocity *= (1f - dragK);
 
         if (velocity.sqrMagnitude < minSpeed * minSpeed)
             velocity = Vector2.zero;
 
-        // 2) 이동(월드 좌표)
+        // 2) 이동
         transform.position += (Vector3)(velocity * dt);
 
-        // 3) 경계 체크 + 반사 + 벽 마찰
+        // 3) 경계 체크
         Rect worldBounds = GetWorldBounds(boundArea);
-        Rect myWorldRect = GetWorldRect(rt);
+        Rect myWorldRect = GetWorldRect(rt, _selfCorners);
         Vector3 pos = transform.position;
 
         // 좌우
@@ -130,18 +143,18 @@ public class FishTossMover : MonoBehaviour
 
         transform.position = pos;
 
-        // 4) 비주얼 회전
-        if (rotateWithVelocity && velocity != Vector2.zero)
+        // 4) 회전
+        if (rotateWithVelocity && velocity.sqrMagnitude > 1f)
         {
             float ang = Mathf.Atan2(velocity.y, velocity.x) * Mathf.Rad2Deg;
             rt.rotation = Quaternion.Euler(0, 0, ang);
         }
     }
 
-    // ───────── 폭발 + 고양이 소환 ─────────
+    // ───────── 폭발 + 소환 ─────────
     void ExplodeAndSpawnCat()
     {
-        // 1) FX
+        // FX
         if (explodeFxPrefab)
         {
             var fx = Instantiate(explodeFxPrefab, spawnParent ? spawnParent : rt.parent);
@@ -151,11 +164,11 @@ public class FishTossMover : MonoBehaviour
             Destroy(fx, 0.8f);
         }
 
-        // 2) CatManager 통해서 고양이 프리팹 가져오기
+        // CatManager
         var cm = CatManager.Instance;
         if (cm && cm.TryGetPrefab(spawnLevel, out var prefab))
         {
-            cm.MarkDiscovered(spawnLevel); // 발견 처리
+            cm.MarkDiscovered(spawnLevel);
 
             var cat = Instantiate(prefab, spawnParent ? spawnParent : rt.parent);
             var catRt = cat.GetComponent<RectTransform>();
@@ -164,15 +177,10 @@ public class FishTossMover : MonoBehaviour
                 catRt.position = rt.position;
                 catRt.localScale = Vector3.one;
             }
-            else
-            {
-                cat.transform.position = transform.position;
-            }
+            else cat.transform.position = transform.position;
 
-            // 소리
             AudioManager.Instance.PlaySFX(SfxKey.MeowRandom);
 
-            // CatMover 연출
             var mover = cat.GetComponent<CatMover>();
             if (mover && catRt)
             {
@@ -180,14 +188,13 @@ public class FishTossMover : MonoBehaviour
             }
         }
 
-        // 3) 자기 자신 제거
         Destroy(gameObject);
     }
 
     // ───────── Utils ─────────
     Rect GetWorldBounds(RectTransform area)
     {
-        if (area) return GetWorldRect(area);
+        if (area) return GetWorldRect(area, _areaCorners);
         if (!rootCanvas) rootCanvas = GetComponentInParent<Canvas>(true);
         var cam = rootCanvas ? rootCanvas.worldCamera : Camera.main;
         Rect pr = rootCanvas ? rootCanvas.pixelRect : new Rect(0, 0, Screen.width, Screen.height);
@@ -196,10 +203,9 @@ public class FishTossMover : MonoBehaviour
         return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
     }
 
-    static Rect GetWorldRect(RectTransform target)
+    static Rect GetWorldRect(RectTransform target, Vector3[] corners)
     {
-        Vector3[] c = new Vector3[4];
-        target.GetWorldCorners(c);
-        return Rect.MinMaxRect(c[0].x, c[0].y, c[2].x, c[2].y);
+        target.GetWorldCorners(corners);
+        return Rect.MinMaxRect(corners[0].x, corners[0].y, corners[2].x, corners[2].y);
     }
 }

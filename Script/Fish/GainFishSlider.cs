@@ -76,7 +76,7 @@ public class GainFishSlider : MonoBehaviour
         if (isFull)
         {
             _pausedByFull = true;     // 풀로 멈춘 상태
-            _t = durationSeconds;     // 내부 타이머도 1에 고정
+            _t = GameManager.Instance.OneDayBuffTime > 0 ? Mathf.Max(0.1f, durationSeconds - GameManager.Instance.OneDayBuff_DecreaseFishTime) : Mathf.Max(0.1f, durationSeconds);
             slider.value = 1f;
             return;
         }
