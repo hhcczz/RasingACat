@@ -69,10 +69,9 @@ public class DeviceVariantSpawner : MonoBehaviour
         Quaternion rot = spawnAtThisTransform ? transform.rotation : parent.rotation;
 
         _spawned = Instantiate(prefab, pos, rot, parent);
-        // 필요하면 이름 붙이기
         _spawned.name = $"{prefab.name} (Spawned:{kind})";
     }
 
-    // 필요하면 다른 스크립트에서 호출 가능
     public GameObject GetSpawnedInstance() => _spawned;
+
 }
