@@ -28,9 +28,6 @@ public class CatCoinManager : MonoBehaviour
     [Tooltip("황금코인 획득 확률")]
     public double getCatGoldCoinProbability = 0.01d;
 
-    [Header("고양이 알 획득 확률")]
-    [Min(0)] public double _catEggProbability = 0.01d;
-
     void Awake() { if (Instance == null) { Instance = this; DontDestroyOnLoad(gameObject); } }
 
 
@@ -153,10 +150,6 @@ public class CatCoinManager : MonoBehaviour
         if (UnityEngine.Random.value < p2) return 2;
         return 1;
     }
-    public bool GetCatEggForCoinTick()
-    {
-        return UnityEngine.Random.value < _catEggProbability;
-    }
     public bool GetCatGoldCoinForCoinTick()
     {
         return UnityEngine.Random.value < getCatGoldCoinProbability;
@@ -208,4 +201,5 @@ public class CatCoinManager : MonoBehaviour
     }
 
 }
+
 
