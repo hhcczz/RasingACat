@@ -13,43 +13,43 @@ public class CatCoinManager : MonoBehaviour
     public event Action<long> OnCatCoinChanged;
     public event Action<long> OnCatGoldCoinChanged;
 
-    [Header("ÀÏ¹İ ÄÚÀÎ")]
-    [Tooltip("ÇÃ·¹ÀÌ¾î°¡ ¼ÒÀ¯ÇÏ°í ÀÖ´Â °í¾çÀÌ ÄÚÀÎ °³¼ö")]
+    [Header("ì¼ë°˜ ì½”ì¸")]
+    [Tooltip("í”Œë ˆì´ì–´ê°€ ì†Œìœ í•˜ê³  ìˆëŠ” ê³ ì–‘ì´ ì½”ì¸ ê°œìˆ˜")]
     [Min(0)] public long HaveCatCoinCount = 0;
-    [Tooltip("ÇÃ·¹ÀÌ¾î°¡ ¼ÒÀ¯ÇÒ ¼ö ÀÖ´Â ÃÖ´ë ÄÚÀÎ °³¼ö")]
-    [Min(0)] public long MaxCatCoinCount = 99999999999; // 99¾ï9999¸¸9999
+    [Tooltip("í”Œë ˆì´ì–´ê°€ ì†Œìœ í•  ìˆ˜ ìˆëŠ” ìµœëŒ€ ì½”ì¸ ê°œìˆ˜")]
+    [Min(0)] public long MaxCatCoinCount = 99999999999; // 99ì–µ9999ë§Œ9999
 
-    [Header("È²±İ ÄÚÀÎ")]
-    [Tooltip("ÇÃ·¹ÀÌ¾î°¡ ¼ÒÀ¯ÇÏ°í ÀÖ´Â È²±İ °í¾çÀÌ ÄÚÀÎ °³¼ö")]
+    [Header("í™©ê¸ˆ ì½”ì¸")]
+    [Tooltip("í”Œë ˆì´ì–´ê°€ ì†Œìœ í•˜ê³  ìˆëŠ” í™©ê¸ˆ ê³ ì–‘ì´ ì½”ì¸ ê°œìˆ˜")]
     [Min(0)] public long HaveCatGoldCoinCount = 0;
-    [Tooltip("ÇÃ·¹ÀÌ¾î°¡ ¼ÒÀ¯ÇÒ ¼ö ÀÖ´Â ÃÖ´ë È²±İ ÄÚÀÎ °³¼ö")]
-    [Min(0)] public long MaxCatGoldCoinCount = 99999999; // 9999¸¸9999
+    [Tooltip("í”Œë ˆì´ì–´ê°€ ì†Œìœ í•  ìˆ˜ ìˆëŠ” ìµœëŒ€ í™©ê¸ˆ ì½”ì¸ ê°œìˆ˜")]
+    [Min(0)] public long MaxCatGoldCoinCount = 99999999; // 9999ë§Œ9999
 
-    [Tooltip("È²±İÄÚÀÎ È¹µæ È®·ü")]
+    [Tooltip("í™©ê¸ˆì½”ì¸ íšë“ í™•ë¥ ")]
     public double getCatGoldCoinProbability = 0.01d;
 
-    [Header("°í¾çÀÌ ¾Ë È¹µæ È®·ü")]
+    [Header("ê³ ì–‘ì´ ì•Œ íšë“ í™•ë¥ ")]
     [Min(0)] public double _catEggProbability = 0.01d;
 
     void Awake() { if (Instance == null) { Instance = this; DontDestroyOnLoad(gameObject); } }
 
 
-    // ÀÏ¹İÄÚÀÎ
+    // ì¼ë°˜ì½”ì¸
     public long TotalSummonedCoins = 0;
-    //È²±İÄÚÀÎ
+    //í™©ê¸ˆì½”ì¸
     public long TotalSummonedGoldCoins = 0;
 
 
     /// <summary>
-    /// °í¾çÀÌ ÄÚÀÎÀ» ´õÇÏ´Â ÇÔ¼öÀÔ´Ï´Ù.
+    /// ê³ ì–‘ì´ ì½”ì¸ì„ ë”í•˜ëŠ” í•¨ìˆ˜ì…ë‹ˆë‹¤.
     /// </summary>
-    /// <param name="amount">°í¾çÀÌ ÄÚÀÎ °³¼ö(long)</param>
+    /// <param name="amount">ê³ ì–‘ì´ ì½”ì¸ ê°œìˆ˜(long)</param>
     /// <returns></returns>
     public long AddCatCoin(long amount = 0)
     {
         if (amount <= 0)
         {
-            Debug.LogError($"[CatCoinManager] AddCatCoin¿¡ À½¼ö È¤Àº 0 ÀÔ·Â | {amount}");
+            Debug.LogError($"[CatCoinManager] AddCatCoinì— ìŒìˆ˜ í˜¹ì€ 0 ì…ë ¥ | {amount}");
             return 0;
         }
 
@@ -60,54 +60,54 @@ public class CatCoinManager : MonoBehaviour
         OnCatCoinChanged?.Invoke(HaveCatCoinCount);
 
         if (added < amount)
-            Debug.Log($"[CatCoinManager] ¿ë·® ÃÊ°ú·Î {amount - added}´Â Ãß°¡ ½ÇÆĞ. (ÇöÀç {HaveCatCoinCount}/{MaxCatCoinCount})");
+            Debug.Log($"[CatCoinManager] ìš©ëŸ‰ ì´ˆê³¼ë¡œ {amount - added}ëŠ” ì¶”ê°€ ì‹¤íŒ¨. (í˜„ì¬ {HaveCatCoinCount}/{MaxCatCoinCount})");
 
-        Debug.Log($"[CatCoinManager] °í¾çÀÌ ÄÚÀÎ Ãß°¡ ¼º°ø | ½ÇÁ¦ Ãß°¡: {added}");
+        Debug.Log($"[CatCoinManager] ê³ ì–‘ì´ ì½”ì¸ ì¶”ê°€ ì„±ê³µ | ì‹¤ì œ ì¶”ê°€: {added}");
         TotalSummonedCoins += added;
         return added;
     }
 
     /// <summary>
-    /// °í¾çÀÌ ÄÚÀÎÀ» Á¦°ÅÇÏ´Â ÇÔ¼öÀÔ´Ï´Ù.
+    /// ê³ ì–‘ì´ ì½”ì¸ì„ ì œê±°í•˜ëŠ” í•¨ìˆ˜ì…ë‹ˆë‹¤.
     /// </summary>
-    /// <param name="amount">°í¾çÀÌ ÄÚÀÎ °³¼ö(long)</param>
+    /// <param name="amount">ê³ ì–‘ì´ ì½”ì¸ ê°œìˆ˜(long)</param>
     /// <returns></returns>
-    public float RemoveCatCoin(long amount = 0)
+    public long RemoveCatCoin(long amount = 0)
     {
         if (amount <= 0)
         {
-            Debug.LogError($"[CatCoinManager] RemoveCatCoin¿¡ À½¼ö È¤Àº 0 ÀÔ·Â | {amount} ");
+            Debug.LogError($"[CatCoinManager] RemoveCatCoinì— ìŒìˆ˜ í˜¹ì€ 0 ì…ë ¥ | {amount} ");
             return 0;
         }
 
-        long removed = Math.Min(HaveCatCoinCount, amount);  // º¸À¯·® ±âÁØ
+        long removed = Math.Min(HaveCatCoinCount, amount);  // ë³´ìœ ëŸ‰ ê¸°ì¤€
         HaveCatCoinCount -= removed;
 
         OnCatCoinChanged?.Invoke(HaveCatCoinCount);
 
         if (removed < amount)
-            Debug.Log($"[CatCoinManager] ¿ë·® ÃÊ°ú·Î {amount - removed}´Â Á¦°Å ½ÇÆĞ. (ÇöÀç {HaveCatCoinCount}/{MaxCatCoinCount})");
+            Debug.Log($"[CatCoinManager] ìš©ëŸ‰ ì´ˆê³¼ë¡œ {amount - removed}ëŠ” ì œê±° ì‹¤íŒ¨. (í˜„ì¬ {HaveCatCoinCount}/{MaxCatCoinCount})");
 
-        Debug.Log($"[CatCoinManager] °í¾çÀÌ ÄÚÀÎ Á¦°Å ¼º°ø | ½ÇÁ¦ Ãß°¡: {removed}");
+        Debug.Log($"[CatCoinManager] ê³ ì–‘ì´ ì½”ì¸ ì œê±° ì„±ê³µ | ì‹¤ì œ ì¶”ê°€: {removed}");
 
         return removed;
     }
 
     /// <summary>
-    /// °í¾çÀÌ ÄÚÀÎ ¹è¼ö ÆÇÁ¤.
+    /// ê³ ì–‘ì´ ì½”ì¸ ë°°ìˆ˜ íŒì •.
     /// 
-    /// CatGymÀÇ ¾÷±×·¹ÀÌµå ·¹º§°ú ±¸¸Å »óÇ°¿¡ µû¶ó ÃÖÁ¾ ¹è¼ö¸¦ °áÁ¤ÇÕ´Ï´Ù.
-    /// - CatGymLevel[0] : ´õºí(2¹è) È®·ü
-    /// - CatGymLevel[1] : Æ®¸®ÇÃ(3¹è) È®·ü
-    /// - ±âº» ¹İÈ¯°ª : 1¹è
+    /// CatGymì˜ ì—…ê·¸ë ˆì´ë“œ ë ˆë²¨ê³¼ êµ¬ë§¤ ìƒí’ˆì— ë”°ë¼ ìµœì¢… ë°°ìˆ˜ë¥¼ ê²°ì •í•©ë‹ˆë‹¤.
+    /// - CatGymLevel[0] : ë”ë¸”(2ë°°) í™•ë¥ 
+    /// - CatGymLevel[1] : íŠ¸ë¦¬í”Œ(3ë°°) í™•ë¥ 
+    /// - ê¸°ë³¸ ë°˜í™˜ê°’ : 1ë°°
     /// 
-    /// Æ¯¼ö »óÇ° ±ÔÄ¢:
-    /// - [0]¹ø »óÇ° : ÃÖ¼Ò 2¹è È®Á¤ (3¹è È®·üÀº ¿©ÀüÈ÷ Àû¿ëµÊ)
-    /// - [1]¹ø »óÇ° : ¹«Á¶°Ç 3¹è
-    /// - [2]¹ø »óÇ° : ¹«Á¶°Ç 4¹è
-    /// - [3]¹ø »óÇ° : ¹«Á¶°Ç 5¹è
+    /// íŠ¹ìˆ˜ ìƒí’ˆ ê·œì¹™:
+    /// - [0]ë²ˆ ìƒí’ˆ : ìµœì†Œ 2ë°° í™•ì • (3ë°° í™•ë¥ ì€ ì—¬ì „íˆ ì ìš©ë¨)
+    /// - [1]ë²ˆ ìƒí’ˆ : ë¬´ì¡°ê±´ 3ë°°
+    /// - [2]ë²ˆ ìƒí’ˆ : ë¬´ì¡°ê±´ 4ë°°
+    /// - [3]ë²ˆ ìƒí’ˆ : ë¬´ì¡°ê±´ 5ë°°
     /// 
-    /// ¹İÈ¯: ÃÖÁ¾ ¹è¼ö (1, 2, 3, 4, 5)
+    /// ë°˜í™˜: ìµœì¢… ë°°ìˆ˜ (1, 2, 3, 4, 5)
     /// </summary>
     public int MultipleGetCatCoin()
     {
@@ -115,7 +115,7 @@ public class CatCoinManager : MonoBehaviour
         if (gym == null || gym.CatGymLevel == null)
             return 1;
 
-        // --- ±âº» È®·ü (Gym¿¡¼­¸¸ ¿µÇâ) ---
+        // --- ê¸°ë³¸ í™•ë¥  (Gymì—ì„œë§Œ ì˜í–¥) ---
         float p2 = 0f, p3 = 0f;
         if (gym.GetDoubleCatCoinProbabilityValue != null && gym.CatGymLevel.Length > 0)
         {
@@ -128,30 +128,30 @@ public class CatCoinManager : MonoBehaviour
             p3 = Mathf.Clamp01(gym.GetThreeCatCoinProbabilityValue[lv3] * 0.01f);
         }
 
-        // --- »óÇ° Æ¯Àü Àû¿ë ---
+        // --- ìƒí’ˆ íŠ¹ì „ ì ìš© ---
         if (CrystalShopManager.Instance != null)
         {
-            // [3]¹ø »óÇ° : ¹«Á¶°Ç 5¹è
+            // [3]ë²ˆ ìƒí’ˆ : ë¬´ì¡°ê±´ 5ë°°
             if (CrystalShopManager.Instance.IsPurchased(3))
                 return 5;
 
-            // [2]¹ø »óÇ° : ¹«Á¶°Ç 4¹è
+            // [2]ë²ˆ ìƒí’ˆ : ë¬´ì¡°ê±´ 4ë°°
             if (CrystalShopManager.Instance.IsPurchased(2))
                 return 4;
 
-            // [1]¹ø »óÇ° : ¹«Á¶°Ç 3¹è
+            // [1]ë²ˆ ìƒí’ˆ : ë¬´ì¡°ê±´ 3ë°°
             if (CrystalShopManager.Instance.IsPurchased(1))
                 return 3;
 
-            // [0]¹ø »óÇ° : ÃÖ¼Ò 2¹è ÀÌ»ó º¸Àå + 3¹è È®·ü Ã¼Å©
+            // [0]ë²ˆ ìƒí’ˆ : ìµœì†Œ 2ë°° ì´ìƒ ë³´ì¥ + 3ë°° í™•ë¥  ì²´í¬
             if (CrystalShopManager.Instance.IsPurchased(0))
             {
                 if (UnityEngine.Random.value < p3) return 3;
-                return 2; // 3¹è ½ÇÆĞ ½Ã ¹«Á¶°Ç 2¹è
+                return 2; // 3ë°° ì‹¤íŒ¨ ì‹œ ë¬´ì¡°ê±´ 2ë°°
             }
         }
 
-        // --- ±âº» ·ÎÁ÷ (»óÇ° ¹Ì±¸¸Å ½Ã) ---
+        // --- ê¸°ë³¸ ë¡œì§ (ìƒí’ˆ ë¯¸êµ¬ë§¤ ì‹œ) ---
         if (UnityEngine.Random.value < p3) return 3;
         if (UnityEngine.Random.value < p2) return 2;
         return 1;
@@ -166,15 +166,15 @@ public class CatCoinManager : MonoBehaviour
     }
 
     /// <summary>
-    /// °í¾çÀÌ È²±İ ÄÚÀÎÀ» ´õÇÏ´Â ÇÔ¼öÀÔ´Ï´Ù.
+    /// ê³ ì–‘ì´ í™©ê¸ˆ ì½”ì¸ì„ ë”í•˜ëŠ” í•¨ìˆ˜ì…ë‹ˆë‹¤.
     /// </summary>
-    /// <param name="amount">°í¾çÀÌ È²±İ ÄÚÀÎ °³¼ö(long)</param>
+    /// <param name="amount">ê³ ì–‘ì´ í™©ê¸ˆ ì½”ì¸ ê°œìˆ˜(long)</param>
     /// <returns></returns>
     public long AddCatGoldCoin(long amount = 0)
     {
         if (amount <= 0)
         {
-            Debug.LogError($"[CatCoinManager] AddCatGoldCoin¿¡ À½¼ö È¤Àº 0 ÀÔ·Â | {amount}");
+            Debug.LogError($"[CatCoinManager] AddCatGoldCoinì— ìŒìˆ˜ í˜¹ì€ 0 ì…ë ¥ | {amount}");
             return 0;
         }
 
@@ -185,31 +185,32 @@ public class CatCoinManager : MonoBehaviour
         OnCatGoldCoinChanged?.Invoke(HaveCatGoldCoinCount);
 
         if (added < amount)
-            Debug.Log($"[CatCoinManager] ¿ë·® ÃÊ°ú·Î {amount - added}´Â Ãß°¡ ½ÇÆĞ. (ÇöÀç {HaveCatGoldCoinCount}/{MaxCatGoldCoinCount})");
+            Debug.Log($"[CatCoinManager] ìš©ëŸ‰ ì´ˆê³¼ë¡œ {amount - added}ëŠ” ì¶”ê°€ ì‹¤íŒ¨. (í˜„ì¬ {HaveCatGoldCoinCount}/{MaxCatGoldCoinCount})");
 
-        Debug.Log($"[CatCoinManager] °í¾çÀÌ °ñµå ÄÚÀÎ Ãß°¡ ¼º°ø | ½ÇÁ¦ Ãß°¡: {added}");
+        Debug.Log($"[CatCoinManager] ê³ ì–‘ì´ ê³¨ë“œ ì½”ì¸ ì¶”ê°€ ì„±ê³µ | ì‹¤ì œ ì¶”ê°€: {added}");
         TotalSummonedGoldCoins += added;
         return added;
     }
 
-    public float RemoveCatGoldCoin(long amount = 0)
+    public long RemoveCatGoldCoin(long amount = 0)
     {
         if (amount <= 0)
         {
-            Debug.LogError($"[CatCoinManager] RemoveCatGoldCoin¿¡ À½¼ö È¤Àº 0 ÀÔ·Â | {amount} ");
+            Debug.LogError($"[CatCoinManager] RemoveCatGoldCoinì— ìŒìˆ˜ í˜¹ì€ 0 ì…ë ¥ | {amount} ");
             return 0;
         }
 
-        long removed = Math.Min(HaveCatGoldCoinCount, amount);  // º¸À¯·® ±âÁØ
+        long removed = Math.Min(HaveCatGoldCoinCount, amount);  // ë³´ìœ ëŸ‰ ê¸°ì¤€
         HaveCatGoldCoinCount -= removed;
 
         OnCatGoldCoinChanged?.Invoke(HaveCatGoldCoinCount);
 
         if (removed < amount)
-            Debug.Log($"[CatCoinManager] ¿ë·® ÃÊ°ú·Î {amount - removed}´Â Á¦°Å ½ÇÆĞ. (ÇöÀç {HaveCatGoldCoinCount}/{MaxCatGoldCoinCount})");
+            Debug.Log($"[CatCoinManager] ìš©ëŸ‰ ì´ˆê³¼ë¡œ {amount - removed}ëŠ” ì œê±° ì‹¤íŒ¨. (í˜„ì¬ {HaveCatGoldCoinCount}/{MaxCatGoldCoinCount})");
 
-        Debug.Log($"[CatCoinManager] È²±İ °í¾çÀÌ ÄÚÀÎ Á¦°Å ¼º°ø | ½ÇÁ¦ Ãß°¡: {removed}");
+        Debug.Log($"[CatCoinManager] í™©ê¸ˆ ê³ ì–‘ì´ ì½”ì¸ ì œê±° ì„±ê³µ | ì‹¤ì œ ì¶”ê°€: {removed}");
 
         return removed;
     }
+
 }
