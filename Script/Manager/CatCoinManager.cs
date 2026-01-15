@@ -61,8 +61,7 @@ public class CatCoinManager : MonoBehaviour
 
         if (added < amount)
             Debug.Log($"[CatCoinManager] 용량 초과로 {amount - added}는 추가 실패. (현재 {HaveCatCoinCount}/{MaxCatCoinCount})");
-
-        Debug.Log($"[CatCoinManager] 고양이 코인 추가 성공 | 실제 추가: {added}");
+        
         TotalSummonedCoins += added;
         return added;
     }
@@ -87,8 +86,6 @@ public class CatCoinManager : MonoBehaviour
 
         if (removed < amount)
             Debug.Log($"[CatCoinManager] 용량 초과로 {amount - removed}는 제거 실패. (현재 {HaveCatCoinCount}/{MaxCatCoinCount})");
-
-        Debug.Log($"[CatCoinManager] 고양이 코인 제거 성공 | 실제 추가: {removed}");
 
         return removed;
     }
@@ -187,7 +184,6 @@ public class CatCoinManager : MonoBehaviour
         if (added < amount)
             Debug.Log($"[CatCoinManager] 용량 초과로 {amount - added}는 추가 실패. (현재 {HaveCatGoldCoinCount}/{MaxCatGoldCoinCount})");
 
-        Debug.Log($"[CatCoinManager] 고양이 골드 코인 추가 성공 | 실제 추가: {added}");
         TotalSummonedGoldCoins += added;
         return added;
     }
@@ -208,9 +204,8 @@ public class CatCoinManager : MonoBehaviour
         if (removed < amount)
             Debug.Log($"[CatCoinManager] 용량 초과로 {amount - removed}는 제거 실패. (현재 {HaveCatGoldCoinCount}/{MaxCatGoldCoinCount})");
 
-        Debug.Log($"[CatCoinManager] 황금 고양이 코인 제거 성공 | 실제 추가: {removed}");
-
         return removed;
     }
 
 }
+
